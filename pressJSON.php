@@ -3,6 +3,7 @@
 	$type = mysql_escape_string($_GET['q']);
 	$title = 'KAMIYONET - acclaim';
 	$link = mysql_connect($HOSTNAME, $USERNAME, $PASSWORD) or die ('Could not connect: ' . mysql_error()); 
+  mysql_query("SET NAMES UTF8");
  	mysql_select_db($DB_NAME) or die ('Could not select database');
 	if ($type == 's') {
 		$query = 'SELECT * FROM '.$ACCLAIM.' WHERE short <> \'\' ORDER BY ID DESC;';

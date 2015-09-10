@@ -7,6 +7,7 @@ $cb->setToken('1396348188-GLJGOMgERa7HYwBNMkXPCsSRtvDWYf2CDfELnIb', 'oszYKyKJ30x
 
 $api = 'statuses/userTimeline';
 $type = mysql_escape_string($_GET['q']);
+$count = intval(mysql_escape_string($_GET['c']));
 if ($type == 'm') {
 	$api = 'statuses/mentionsTimeline';
 } else if ($type == 'u') {
@@ -15,7 +16,7 @@ if ($type == 'm') {
 
 $params['screen_name'] = 'seanchenpiano';
 $params['include_rts'] = true;
-$params['count'] = 10;
+$params['count'] = $count;
 
 $cb->setReturnFormat(CODEBIRD_RETURNFORMAT_JSON);
 $data = (array) $cb->$api($params);
