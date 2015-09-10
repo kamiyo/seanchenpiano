@@ -1,18 +1,6 @@
 // Gapi functions
 
-var google = angular.module('google', ['services.Gapi'])
-    .constant('apiKey', 'AIzaSyBJm8pj4Ejqw8rHJVgk_0s6w1HlB6RfZ34')
-    .run(['Gapi, apiKey', function (Gapi, apiKey) {
-        var self = this;
-        var sendKey = function () {
-            gapi.client.setApiKey(key);
-            self.log.info('Key set.');
-        };
-        self.loaded.promise.then(sendKey);
-        return self.ready.promise;
-    }]);
-
-angular.module('services.Gapi', [])
+var gapiapp = angular.module('services.Gapi', [])
     .constant('gapiUrl', 'https://apis.google.com/js/client.js')
     .service('Gapi', ['$rootScope', '$q', '$log', '$window', 'gapiUrl',
         function ($rootScope, $q, $log, $window, gapiUrl) {
@@ -60,11 +48,23 @@ angular.module('services.Gapi', [])
             };
         }]);
 
+var google = angular.module('google', ['services.Gapi'])
+    .constant('apiKey', 'AIzaSyBJm8pj4Ejqw8rHJVgk_0s6w1HlB6RfZ34')
+    .run(function (Gapi, apiKey) {
+        var self = Gapi;
+        var sendKey = function () {
+            gapi.client.setApiKey(apiKey);
+            self.log.info('Key set.');
+        };
+        self.loaded.promise.then(sendKey);
+        return self.ready.promise;
+    });
+
 // parse event and time
 
-angular.module('parseEventTime', [])
-.factory('string', [function () {
-    return function (event) {
+angular.module('services.parseEventTime', [])
+.service('parseEventTime', [function () {
+    this.string = function (event) {
         if (typeof (event.start.dateTime) === 'undefined') {
             return moment(event.start.date).format("dddd MMMM D, YYYY");
         } else {
@@ -76,8 +76,7 @@ angular.module('parseEventTime', [])
             return date.format("dddd MMMM D, YYYY - HH:mm z");
         }
     };
-}]).factory('moment', [function () {
-    return function (event) {
+    this.moment = function (event) {
         if (typeof (event.start.dateTime) === 'undefined') {
             return moment(event.start.date);
         } else {
@@ -93,10 +92,6 @@ angular.module('parseEventTime', [])
 
 // GOOGLE CALENDAR LOADER
 
-var cal = angular.module('googleCalendar', [
-    'services.getGoogleCalendar'
-]);
-
 angular.module('values.calendar', [])
 .value('calParams', {
     'path': 'calendar/v3/calendars/rjeriqtl1igtpf9kl0v17jjvuc@group.calendar.google.com/events',
@@ -110,7 +105,7 @@ angular.module('values.calendar', [])
 angular.module('services.getGoogleCalendar', [
     'google',
     'values.calendar',
-    'parseEventTime'
+    'services.parseEventTime'
 ]).service('getGoogleCalendar', ['$log', '$rootScope', 'Gapi', '$q', 'calParams', 'parseEventTime',
     function ($log, $rootScope, Gapi, $q, calParams, parseEventTime) {
         var calList = null;
@@ -151,6 +146,11 @@ angular.module('services.getGoogleCalendar', [
             });
         }
     }]);
+
+
+var cal = angular.module('googleCalendar', [
+    'services.getGoogleCalendar'
+]);
 
 // CALENDAR WIDGET DISPLAY
 
@@ -197,9 +197,9 @@ angular.module('services.calendarWidget', [])
 
 // MUSIC PLAYER
 
-var mp = angular.module('mp', ['service.musicPlayer'])
+var mp = angular.module('mp', ['services.musicPlayer'])
 
-angular.module('service.musicPlayer', [])
+angular.module('services.musicPlayer', [])
     .constant('swfUrl', './scripts/swf/')
     .constant('smJs', './scripts/soundmanager2-nodebug-jsmin.js')
     .service('musicPlayer', ['$rootScope', '$q', '$log', '$filter', 'swfUrl', 'smJs', '$timeout',
@@ -359,7 +359,7 @@ angular.module('service.musicPlayer', [])
             });
         }]);
 
-// YOUTUBE LOADER
+// YOUTUBE PLAYER LOADER
 
 var yt = angular.module('yt', []);
 yt.constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com');
@@ -367,15 +367,37 @@ yt.constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9');
 
 yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
     function ($rootScope, $q, $log, $location, apiUrl) {
+        var self = this;
+
         this.player = null;
         this.videoId = null;
         this.scope = $rootScope;
         this.log = $log;
-        var self = this;
+
         this.loaded = $q.defer();
         this.init = function () {
-            self.load_(apiUrl, $location.search().video);
+            var onReady = function () {
+                self.loaded.resolve();
+                self.scope.$digest();
+            }
+
+            window.onYouTubePlayerAPIReady = function () {
+                self.player = new YT.Player('player', {
+                    videoId: self.videoId,
+                    wmode: 'transparent',
+                    playerVars: {
+                        'autoplay': 1,
+                        'wmode': 'transparent'
+                    },
+                    events: {
+                        'onReady': onReady
+                    }
+                });
+            };
+
+            $.getScript(apiUrl);
         }
+
         this.loadVideo = function (vId) {
             if (typeof (self.player) === 'undefined') {
                 $log.log('waiting');
@@ -391,32 +413,9 @@ yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
         }
     }]);
 
+// YOUTUBE PLAYLIST LOADER
 
-yt.Player.prototype.load_ = function (apiUrl, video) {
-    var self = this;
-
-    var onReady = function () {
-        self.loaded.resolve();
-        self.scope.$digest();
-    }
-    window.onYouTubePlayerAPIReady = function () {
-        self.player = new YT.Player('player', {
-            videoId: video,
-            wmode: 'transparent',
-            playerVars: {
-                'autoplay': 1,
-                'wmode': 'transparent'
-            },
-            events: {
-                'onReady': onReady
-            }
-        });
-    };
-    $.getScript(apiUrl, function () {
-    });
-};
-
-var loader = angular.module('vloader', ['goog']);
+var loader = angular.module('vloader', ['google']);
 
 loader.value('requestParams', {
     'path': 'youtube/v3/playlistItems',
@@ -433,97 +432,98 @@ loader.value('requestParams', {
 });
 
 loader.service('getVideos', function ($rootScope, $log, $q, Gapi, requestParams, statsParams) {
-    var scope = $rootScope;
-    var prevTitle;
-    var lastToken = "";
-    var pageToken;
-    var videos;
-    var lastIndex = 0;
-    var nextCount = 0;
-    var vidList;
-    var order;
-    var vidDefer;
-    var getting = false;
+    this.scope = $rootScope;
+    this.prevTitle = "";
+    this.lastToken = "";
+    this.pageToken = "";
+    this.videos = [];
+    this.lastIndex = 0;
+    this.nextCount = 0;
+    this.vidList = "";
+    //this.order;
+    this.vidDefer = null;
+    this.getting = false;
 
-    return {
-        isGetting: function () {
-            return getting;
-        },
-        reset: function () {
-            $log.log('reset');
-            prevTitle = "";
-            lastToken = "";
-            pageToken = "";
+    var self = this;
+    this.isGetting = function () {
+        return getting;
+    };
+
+    this.reset = function() {
+        $log.log('reset');
+        prevTitle = "";
+        lastToken = "";
+        pageToken = "";
+        videos = [];
+        lastIndex = 0;
+        nextCount = 0;
+        vidList = "";
+    };
+
+    this.get = function () {
+        getting = true;
+        vidDefer = $q.defer();
+        lastIndex = lastIndex + nextCount;
+        var req = angular.copy(requestParams);
+        if (!pageToken) {
             videos = [];
-            lastIndex = 0;
-            nextCount = 0;
-            vidList = "";
-        },
-        get: function () {
-            getting = true;
-            vidDefer = $q.defer();
-            lastIndex = lastIndex + nextCount;
-            var req = angular.copy(requestParams);
-            if (!pageToken) {
-                videos = [];
-            } else {
-                req.params.pageToken = pageToken;
-            }
-            lastToken = pageToken;
-            $log.log('requesting', req);
-            Gapi.request(req).then(function (response) {
-                $log.log('received', response);
-
-                vidList = "";
-                for (var i = 0; i < response.items.length; i++) {
-                    vidList = vidList + response.items[i].snippet.resourceId.videoId + ",";
-                }
-
-                var statsReq = angular.copy(statsParams);
-                statsReq.params.id = vidList;
-                //$log.log('getting stats', statsReq);
-                return Gapi.request(statsReq).then(function (statsResponse) {
-                    //$log.log('received stats', statsResponse);
-                    for (var i = 0; i < statsResponse.items.length; i++) {
-                        reg0 = /PT(\d+)H(\d+)M(\d+)S/;
-                        reg1 = /PT(\d+)M(\d+)S/;
-                        reg2 = /PT(\d+)M/;
-                        reg3 = /PT(\d+)S/;
-                        dur = statsResponse.items[i].contentDetails.duration;
-                        if (reg0.test(dur)) {
-                            dur = dur.replace(reg0, function (m, a, b, c) { return (a.length < 2 ? "0" : "") + a + ":" + (b.length < 2 ? "0" : "") + b + ":" + (c.length < 2 ? "0" : "") + c; });
-                        } else if (reg1.test(dur)) {
-                            dur = dur.replace(reg1, function (m, a, b) { return (a.length < 2 ? "0" : "") + a + ":" + (b.length < 2 ? "0" : "") + b; });
-                        } else if (reg2.test(dur)) {
-                            dur = dur.replace(reg2, function (m, a) { return (a.length < 2 ? "0" : "") + a + ":00"; });
-                        } else if (reg3.test(dur)) {
-                            dur = dur.replace(reg3, function (m, a) { return "00:" + (a.length < 2 ? "0" : "") + a; });
-                        }
-                        response.items[i].duration = dur;
-                        response.items[i].statistics = statsResponse.items[i].statistics;
-                    }
-                    pageToken = response.nextPageToken;
-                    videos = videos.concat(response.items);
-                    nextCount = response.items.length;
-                    getting = false;
-                    vidDefer.resolve(videos);
-                });
-            });
-            return vidDefer.promise;
-        },
-        next: function () {
-            return pageToken;
-        },
-        lastIndex: function () {
-            return lastIndex;
-        },
-        returnOrder: function () {
-            return order;
+        } else {
+            req.params.pageToken = pageToken;
         }
-    }
+        lastToken = pageToken;
+        $log.log('requesting', req);
+        Gapi.request(req).then(function (response) {
+            $log.log('received', response);
+
+            vidList = "";
+            for (var i = 0; i < response.items.length; i++) {
+                vidList = vidList + response.items[i].snippet.resourceId.videoId + ",";
+            }
+
+            var statsReq = angular.copy(statsParams);
+            statsReq.params.id = vidList;
+            //$log.log('getting stats', statsReq);
+            return Gapi.request(statsReq).then(function (statsResponse) {
+                //$log.log('received stats', statsResponse);
+                for (var i = 0; i < statsResponse.items.length; i++) {
+                    reg0 = /PT(\d+)H(\d+)M(\d+)S/;
+                    reg1 = /PT(\d+)M(\d+)S/;
+                    reg2 = /PT(\d+)M/;
+                    reg3 = /PT(\d+)S/;
+                    dur = statsResponse.items[i].contentDetails.duration;
+                    if (reg0.test(dur)) {
+                        dur = dur.replace(reg0, function (m, a, b, c) { return (a.length < 2 ? "0" : "") + a + ":" + (b.length < 2 ? "0" : "") + b + ":" + (c.length < 2 ? "0" : "") + c; });
+                    } else if (reg1.test(dur)) {
+                        dur = dur.replace(reg1, function (m, a, b) { return (a.length < 2 ? "0" : "") + a + ":" + (b.length < 2 ? "0" : "") + b; });
+                    } else if (reg2.test(dur)) {
+                        dur = dur.replace(reg2, function (m, a) { return (a.length < 2 ? "0" : "") + a + ":00"; });
+                    } else if (reg3.test(dur)) {
+                        dur = dur.replace(reg3, function (m, a) { return "00:" + (a.length < 2 ? "0" : "") + a; });
+                    }
+                    response.items[i].duration = dur;
+                    response.items[i].statistics = statsResponse.items[i].statistics;
+                }
+                pageToken = response.nextPageToken;
+                videos = videos.concat(response.items);
+                nextCount = response.items.length;
+                getting = false;
+                vidDefer.resolve(videos);
+            });
+        });
+        return vidDefer.promise;
+    };
+    this.next = function () {
+        return pageToken;
+    };
+    this.lastIndex = function () {
+        return lastIndex;
+    };
+    this.returnOrder = function () {
+        return order;
+    };
 });
 
-angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONresources', 'mp'])
+angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'services.getGoogleCalendar', 'services.calendarWidget', 'yt', 'JSONresources', 'mp', 'services.parseEventTime'])
 .value('$anchorScroll', angular.noop)
 .filter('reverse', function () {
     return function (items) {
@@ -1025,8 +1025,8 @@ angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONre
         templateUrl: "schedule.php",
         controller: "scheduleCtrl",
         resolve: {
-            list: function ($q, $log, getCal) {
-                return getCal.get();
+            list: function ($q, $log, getGoogleCalendar) {
+                return getGoogleCalendar.get();
             }
         },
         reloadOnSearch: false
@@ -1859,14 +1859,14 @@ angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONre
         }
         scrollFn.restore();
     });
-}]).directive('dateString', ['getCal', function (getCal) {
+}]).directive('dateString', ['getGoogleCalendar', function (getGoogleCalendar) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
         }
     }
 }])
-.controller('calendar', ['$scope', '$location', '$timeout', 'days', 'cService', 'getCal', 'scrollFn', function ($scope, $location, $timeout, days, cService, getCal, scrollFn) {
+.controller('calendar', ['$scope', '$location', '$timeout', 'days', 'calendarWidget', 'getGoogleCalendar', 'scrollFn', function ($scope, $location, $timeout, days, calendarWidget, getGoogleCalendar, scrollFn) {
     var date = new Date();
     var scrollItem = '';
     $scope.showCalendar = 'list';
@@ -1888,7 +1888,7 @@ angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONre
             scrollItem = '';
         }, 0);
     });
-    getCal.get().then(function (result) {
+    getGoogleCalendar.get().then(function (result) {
         $scope.masterCalendar = result;
         $scope.listCalendar = [];
         for (var i = 0; i < 3; i++) {
@@ -1897,7 +1897,7 @@ angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONre
             $scope.listCalendar[i].location = mysplit[0] + ", " + mysplit[mysplit.length - 2] + ", " + mysplit[mysplit.length - 1];
         }
 
-        $scope.dateList = getCal.getDateList();
+        $scope.dateList = getGoogleCalendar.getDateList();
         $scope.highlight();
     });
 
@@ -1917,34 +1917,34 @@ angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'cal', 'yt', 'JSONre
                     scrollFn.fn($('.schedule li[scroll-date*="' + $(event.currentTarget).attr('string') + '"]').offset().top - 120);
                 });
                 $('#calendar td[date-iso*=' + moment().format("YYYY-MM-DD") + ']').addClass('isToday');
-                $('#calendar td:not([date-iso*=' + cService.current.format("YYYY-MM-") + '])').not('.calHeader').addClass('otherMonth');
+                $('#calendar td:not([date-iso*=' + calendarWidget.current.format("YYYY-MM-") + '])').not('.calHeader').addClass('otherMonth');
             }
         }, 0);
     };
 
     $scope.initCal = function () {
         $scope.days = days;
-        $scope.month = cService.month();
-        $scope.year = cService.year();
-        $scope.cal = cService.populate();
+        $scope.month = calendarWidget.month();
+        $scope.year = calendarWidget.year();
+        $scope.cal = calendarWidget.populate();
         if (typeof ($scope.dateList) !== 'undefined') {
             $scope.highlight();
         }
     }
 
     $scope.prevMonth = function () {
-        cService.prevMonth();
-        $scope.month = cService.month();
-        $scope.year = cService.year();
-        $scope.cal = cService.populate();
+        calendarWidget.prevMonth();
+        $scope.month = calendarWidget.month();
+        $scope.year = calendarWidget.year();
+        $scope.cal = calendarWidget.populate();
         $scope.highlight();
     }
 
     $scope.nextMonth = function () {
-        cService.nextMonth();
-        $scope.month = cService.month();
-        $scope.year = cService.year();
-        $scope.cal = cService.populate();
+        calendarWidget.nextMonth();
+        $scope.month = calendarWidget.month();
+        $scope.year = calendarWidget.year();
+        $scope.cal = calendarWidget.populate();
         $scope.highlight();
     }
 
