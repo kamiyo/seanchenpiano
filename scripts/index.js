@@ -1,6 +1,6 @@
 // Gapi functions
 
-var gapiapp = angular.module('services.Gapi', [])
+angular.module('services.Gapi', [])
     .constant('gapiUrl', 'https://apis.google.com/js/client.js')
     .service('Gapi', ['$rootScope', '$q', '$log', '$window', 'gapiUrl',
         function ($rootScope, $q, $log, $window, gapiUrl) {
@@ -48,7 +48,7 @@ var gapiapp = angular.module('services.Gapi', [])
             };
         }]);
 
-var google = angular.module('google', ['services.Gapi'])
+angular.module('google', ['services.Gapi'])
     .constant('apiKey', 'AIzaSyBJm8pj4Ejqw8rHJVgk_0s6w1HlB6RfZ34')
     .run(function (Gapi, apiKey) {
         var self = Gapi;
@@ -148,7 +148,7 @@ angular.module('services.getGoogleCalendar', [
     }]);
 
 
-var cal = angular.module('googleCalendar', [
+angular.module('googleCalendar', [
     'services.getGoogleCalendar'
 ]);
 
@@ -197,7 +197,7 @@ angular.module('services.calendarWidget', [])
 
 // MUSIC PLAYER
 
-var mp = angular.module('mp', ['services.musicPlayer'])
+angular.module('mp', ['services.musicPlayer'])
 
 angular.module('services.musicPlayer', [])
     .constant('swfUrl', './scripts/swf/')
@@ -361,11 +361,10 @@ angular.module('services.musicPlayer', [])
 
 // YOUTUBE PLAYER LOADER
 
-var yt = angular.module('yt', []);
-yt.constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com');
-yt.constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9');
-
-yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
+angular.module('yt', [])
+.constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com')
+.constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9')
+.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
     function ($rootScope, $q, $log, $location, apiUrl) {
         var self = this;
 
@@ -415,9 +414,8 @@ yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
 
 // YOUTUBE PLAYLIST LOADER
 
-var loader = angular.module('vloader', ['google']);
-
-loader.value('requestParams', {
+angular.module('vloader', ['google'])
+.value('requestParams', {
     'path': 'youtube/v3/playlistItems',
     'params': {
         'part': 'id, snippet',
@@ -429,9 +427,7 @@ loader.value('requestParams', {
     'params': {
         'part': 'contentDetails, statistics'
     }
-});
-
-loader.service('getVideos', function ($rootScope, $log, $q, Gapi, requestParams, statsParams) {
+}).service('getVideos', function ($rootScope, $log, $q, Gapi, requestParams, statsParams) {
     this.scope = $rootScope;
     this.prevTitle = "";
     this.lastToken = "";
