@@ -522,6 +522,13 @@ angular.module('vloader', ['google'])
 angular.module('constants', [])
 .value('velocityEasing', { duration: 400, easing: [0, 0, 0.355, 1.000] });
 
+angular.module('filters', [])
+.filter('reverse', function () {
+    return function (items) {
+        return items.slice().reverse();
+    };
+})
+
 angular.module('root', [
     'ngRoute',
     'ngSanitize',
@@ -531,15 +538,10 @@ angular.module('root', [
     'youtube', 'JSONresources',
     'mp',
     'services.parseEventTime',
-    'constants'
-])
-
-.value('$anchorScroll', angular.noop)
-.filter('reverse', function () {
-    return function (items) {
-        return items.slice().reverse();
-    };
-}).service('ytInit', ['$location', 'velocityEasing',
+    'constants',
+    'filters'
+]).value('$anchorScroll', angular.noop)
+.service('ytInit', ['$location', 'velocityEasing',
     function ($location, velocityEasing) {
         if ($location.search().video) {
             $('#player').velocity("fadeIn", velocityEasing);
@@ -549,7 +551,7 @@ angular.module('root', [
     this.q = $q;
     this.loaded = this.q.defer();
     this.ready = this.loaded.promise;
-}]).service('scrollFn', function () {
+}]).service('scrollFn', [function () {
     var self = this;
     this.prev = 0;
     this.fn = function (top) {
@@ -569,53 +571,53 @@ angular.module('root', [
     this.save = function () {
         self.prev = $(window).scrollTop();
     }
-}).directive('scrollUp', ['scrollFn', function (scrollFn) {
+}]).directive('scrollUp', ['scrollFn', function (scrollFn) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            element.bind("click", function () { scrollFn.fn(); });
+            $(element).on("click", function () { scrollFn.fn(); });
         }
     }
-}]).directive('infinite', ['$rootScope', '$window', '$log', 'getVideos', function ($rootScope, $window, $log, getVideos) {
+    // CHECK THE INFINITE SCROLLS WORK
+}]).directive('infinite', ['$window', 'getVideos', function ($window, getVideos) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $rootScope.infinite = function () {
+            $($window).on('scroll.infinite', function () {
                 var win = $(this)[0];
                 if (win.innerHeight + win.pageYOffset >= ($('#videos').outerHeight() + $('#videos').offset().top) * 0.8) {
                     if (scope.moreToLoad && !getVideos.isGetting()) {
                         scope.getVids();
                     }
                 }
-            };
-            $($window).bind('scroll.infinite', $rootScope.infinite);
+            });
         }
     }
-}]).directive('homeInfinite', ['$rootScope', '$window', '$log', function ($rootScope, $window, $log) {
+}]).directive('homeInfinite', ['$window', function ($window) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $($window).bind('scroll.infinite', function () {
+            $($window).on('scroll.infinite', function () {
                 var win = $(this)[0];
                 if (win.innerHeight + win.pageYOffset >= $('#blogContainer').outerHeight() * 0.8) {
                     scope.getMorePosts();
                 }
             });
-
         }
     }
-}]).directive('clickVideo', ['$rootScope', '$log', 'musicPlayer', 'getVideos', 'ytPlayer', 'toggleYT', 'scrollFn', function ($rootScope, $log, musicPlayer, getVideos, ytPlayer, toggleYT, scrollFn) {
+    // CHECK INFINITE SCROLLS ^
+}]).directive('clickVideo', ['musicPlayer', 'getVideos', 'ytPlayer', 'toggleYT', 'scrollFn', function (musicPlayer, getVideos, ytPlayer, toggleYT, scrollFn) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            element.bind("click", function (e) {
+            $(element).on("click", function (e) {
                 value = attrs.clickVideo;
-                angular.element('.items.active').removeClass('active');
-                angular.element(element).addClass('active');
+                $('.items.active').removeClass('active');
+                $(element).addClass('active');
                 if (musicPlayer.sound && (musicPlayer.sound.playState == 1)) {
                     $('.icon-pause').trigger('click');
                 }
-                thePlayer = angular.element('#player');
+                thePlayer = $('#player');
                 toggleYT.show();
                 ytPlayer.loadVideo(value);
                 scrollFn.fn();
@@ -626,7 +628,7 @@ angular.module('root', [
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            element.bind("load", function (e) {
+            $(element).on("load", function (e) {
                 $timeout(function () {
                     deferrer.loaded.resolve();
                     deferrer.scope.$digest();
@@ -634,7 +636,7 @@ angular.module('root', [
             });
         }
     }
-}]).directive('bindMusic', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('bindMusic', ['$rootScope', 'musicPlayer', function ($rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -649,7 +651,7 @@ angular.module('root', [
                 }
             }
             if ($.isArray(scope.music.movements) == true) {
-                element.bind("click", function (e) {
+                $(element).on("click", function (e) {
                     $(element).siblings('ul').animate({
                         opacity: 'toggle',
                         height: 'toggle'
@@ -662,7 +664,7 @@ angular.module('root', [
                     }
                 });
             } else {
-                element.bind("click", function (e) {
+                $(element).on("click", function (e) {
                     $('#mainFooter').removeClass('animate-hide hide').addClass('animate-show show');
                     wasClicked = false;
                     if ($(element).hasClass('active')) {
