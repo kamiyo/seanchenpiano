@@ -361,7 +361,7 @@ angular.module('services.musicPlayer', [])
 
 // YOUTUBE PLAYER LOADER
 
-angular.module('yt', [])
+angular.module('youtube', [])
 .constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com')
 .constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9')
 .service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
@@ -519,19 +519,31 @@ angular.module('vloader', ['google'])
     };
 });
 
-angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'services.getGoogleCalendar', 'services.calendarWidget', 'yt', 'JSONresources', 'mp', 'services.parseEventTime'])
+angular.module('constants', [])
+.value('velocityEasing', { duration: 400, easing: [0, 0, 0.355, 1.000] });
+
+angular.module('root', [
+    'ngRoute',
+    'ngSanitize',
+    'vloader',
+    'services.getGoogleCalendar',
+    'services.calendarWidget',
+    'youtube', 'JSONresources',
+    'mp',
+    'services.parseEventTime',
+    'constants'
+])
+
 .value('$anchorScroll', angular.noop)
 .filter('reverse', function () {
     return function (items) {
         return items.slice().reverse();
     };
-}).service('ytInit', ['$location', 'ytPlayer', function ($location, ytPlayer) {
-    if ($location.search().video) {
-        angular.element('#player').velocity("fadeIn", {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        });
-    }
+}).service('ytInit', ['$location', 'velocityEasing',
+    function ($location, velocityEasing) {
+        if ($location.search().video) {
+            $('#player').velocity("fadeIn", velocityEasing);
+        }
 }]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
     this.scope = $rootScope;
     this.q = $q;
