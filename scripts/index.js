@@ -540,38 +540,42 @@ angular.module('root', [
     'services.parseEventTime',
     'constants',
     'filters'
-]).value('$anchorScroll', angular.noop)
+]).value('$anchorScroll', angular.noop);
+
+angular.module('rootServices', ['constants'])
 .service('ytInit', ['$location', 'velocityEasing',
     function ($location, velocityEasing) {
         if ($location.search().video) {
             $('#player').velocity("fadeIn", velocityEasing);
         }
-}]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
-    this.scope = $rootScope;
-    this.q = $q;
-    this.loaded = this.q.defer();
-    this.ready = this.loaded.promise;
-}]).service('scrollFn', [function () {
-    var self = this;
-    this.prev = 0;
-    this.fn = function (top) {
-        if (typeof (top) === 'undefined') {
-            top = 0;
+    }]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
+        this.scope = $rootScope;
+        this.q = $q;
+        this.loaded = this.q.defer();
+        this.ready = this.loaded.promise;
+    }]).service('scrollFn', [function () {
+        var self = this;
+        this.prev = 0;
+        this.fn = function (top) {
+            if (typeof (top) === 'undefined') {
+                top = 0;
+            }
+            $('html').velocity("scroll", {
+                offset: top,
+                mobileHA: false,
+                duration: 200,
+                easing: 'easeOutCubic'
+            });
         }
-        $('html').velocity("scroll", {
-            offset: top,
-            mobileHA: false,
-            duration: 200,
-            easing: 'easeOutCubic'
-        });
-    }
-    this.restore = function () {
-        self.fn(Math.min(445, self.prev));
-    }
-    this.save = function () {
-        self.prev = $(window).scrollTop();
-    }
-}]).directive('scrollUp', ['scrollFn', function (scrollFn) {
+        this.restore = function () {
+            self.fn(Math.min(445, self.prev));
+        }
+        this.save = function () {
+            self.prev = $(window).scrollTop();
+        }
+    }]);
+
+angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function (scrollFn) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -683,7 +687,7 @@ angular.module('root', [
             }
         }
     }
-}]).directive('seekDrag', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('seekDrag', ['musicPlayer', function (musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -711,7 +715,7 @@ angular.module('root', [
             });
         }
     }
-}]).directive('volumeDrag', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('volumeDrag', ['musicPlayer', function (musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -742,7 +746,7 @@ angular.module('root', [
             });
         }
     }
-}]).directive('toggleMute', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('toggleMute', ['musicPlayer', function (musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -759,7 +763,7 @@ angular.module('root', [
             });
         }
     }
-}]).directive('bindMovement', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('bindMovement', ['musicPlayer', function (musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -777,7 +781,7 @@ angular.module('root', [
                     }, 200);
                 }
             }
-            $(element).bind('click', function () {
+            $(element).on('click', function () {
                 $('#mainFooter').removeClass('animate-hide hide').addClass('animate-show show');
                 wasClicked = false;
                 if ($(element).hasClass('active')) {
@@ -799,11 +803,11 @@ angular.module('root', [
             });
         }
     }
-}]).directive('triggerClick', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
+}]).directive('triggerClick', ['musicPlayer', function (musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).bind('click', function () {
+            $(element).on('click', function () {
                 if (($('.musicHover.active').length == 0) && ($('.musicHover.paused').length == 0)) {
                     musicPlayer.sound.togglePause();
                 }
@@ -821,12 +825,14 @@ angular.module('root', [
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).bind('click', function () {
+            $(element).on('click', function () {
                 $rootScope.$apply($location.path('home'));
             });
         }
     }
-}]).controller('videoLister', ['$rootScope', '$scope', '$log', '$window', 'getVideos', '$timeout', 'ytPlayer', 'toggleYT', 'list', function ($rootScope, $scope, $log, $window, getVideos, $timeout, ytPlayer, toggleYT, list) {
+}]);
+
+angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '$scope', '$log', '$window', 'getVideos', '$timeout', 'ytPlayer', 'toggleYT', 'list', function ($rootScope, $scope, $log, $window, getVideos, $timeout, ytPlayer, toggleYT, list) {
     $scope.videos = [];
     if (!ytPlayer.player) {
         ytPlayer.init();
