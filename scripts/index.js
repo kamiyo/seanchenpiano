@@ -436,7 +436,6 @@ angular.module('vloader', ['google'])
     this.lastIndex = 0;
     this.nextCount = 0;
     this.vidList = "";
-    //this.order;
     this.vidDefer = null;
     this.getting = false;
 
@@ -445,7 +444,7 @@ angular.module('vloader', ['google'])
         return getting;
     };
 
-    this.reset = function() {
+    this.reset = function () {
         $log.log('reset');
         prevTitle = "";
         lastToken = "";
@@ -478,10 +477,11 @@ angular.module('vloader', ['google'])
 
             var statsReq = angular.copy(statsParams);
             statsReq.params.id = vidList;
-            //$log.log('getting stats', statsReq);
             return Gapi.request(statsReq).then(function (statsResponse) {
-                //$log.log('received stats', statsResponse);
+
+                // Use moment.js?
                 for (var i = 0; i < statsResponse.items.length; i++) {
+                    // try to use one regex: PT(\d*)H?(\d*)M?(\d*)S
                     reg0 = /PT(\d+)H(\d+)M(\d+)S/;
                     reg1 = /PT(\d+)M(\d+)S/;
                     reg2 = /PT(\d+)M/;
@@ -519,8 +519,16 @@ angular.module('vloader', ['google'])
     };
 });
 
+// constants
+
 angular.module('constants', [])
-.value('velocityEasing', { duration: 400, easing: [0, 0, 0.355, 1.000] });
+.constant('velocityEasing', { duration: 400, easing: [0, 0, 0.355, 1.000] })
+.constant('menuEntries', ['home', 'about', 'schedule', 'media', 'press', 'contact'])
+.constant('fronts', ['./images/front0.jpg', './images/front1.jpg', './images/front2.jpg', './images/front3.jpg', './images/front4.jpg'])
+.constant('mediaPaths', ['music', 'videos', 'pictures'])
+.constant('mediaIcons', ['music', 'youtube-play', 'camera'])
+
+// filters
 
 angular.module('filters', [])
 .filter('reverse', function () {
@@ -528,6 +536,8 @@ angular.module('filters', [])
         return items.slice().reverse();
     };
 })
+
+// root module
 
 angular.module('root', [
     'ngRoute',
@@ -539,41 +549,63 @@ angular.module('root', [
     'mp',
     'services.parseEventTime',
     'constants',
-    'filters'
+    'filters',
+    'rootServices'
 ]).value('$anchorScroll', angular.noop);
 
+// root services
+
 angular.module('rootServices', ['constants'])
-.service('ytInit', ['$location', 'velocityEasing',
-    function ($location, velocityEasing) {
-        if ($location.search().video) {
-            $('#player').velocity("fadeIn", velocityEasing);
+.service('ytInit', ['$location', 'velocityEasing', function ($location, velocityEasing) {
+    if ($location.search().video) {
+        $('#player').velocity("fadeIn", velocityEasing);
+    }
+}]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
+    this.scope = $rootScope;
+    this.q = $q;
+    this.loaded = this.q.defer();
+    this.ready = this.loaded.promise;
+}]).service('scrollFn', [function () {
+    var self = this;
+    this.prev = 0;
+    this.fn = function (top) {
+        if (typeof (top) === 'undefined') {
+            top = 0;
         }
-    }]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
-        this.scope = $rootScope;
-        this.q = $q;
-        this.loaded = this.q.defer();
-        this.ready = this.loaded.promise;
-    }]).service('scrollFn', [function () {
-        var self = this;
-        this.prev = 0;
-        this.fn = function (top) {
-            if (typeof (top) === 'undefined') {
-                top = 0;
-            }
-            $('html').velocity("scroll", {
-                offset: top,
-                mobileHA: false,
-                duration: 200,
-                easing: 'easeOutCubic'
-            });
+        $('html').velocity("scroll", {
+            offset: top,
+            mobileHA: false,
+            duration: 200,
+            easing: 'easeOutCubic'
+        });
+    }
+    this.restore = function () {
+        self.fn(Math.min(445, self.prev));
+    }
+    this.save = function () {
+        self.prev = $(window).scrollTop();
+    }
+}]).service('toggleYT', ['ytPlayer', '$log', function (ytPlayer, $log) {
+    this.hide = function () {
+        angular.element('#front').removeClass('under').addClass('over').velocity("fadeIn", {
+            duration: 400,
+            easing: [0, 0, 0.355, 1.000]
+        });
+        if (angular.isDefined(ytPlayer.player)) {
+            ytPlayer.player.pauseVideo();
         }
-        this.restore = function () {
-            self.fn(Math.min(445, self.prev));
-        }
-        this.save = function () {
-            self.prev = $(window).scrollTop();
-        }
-    }]);
+    };
+    this.show = function () {
+        $.Velocity.animate(angular.element('#front'), 'fadeOut', {
+            duration: 400,
+            easing: [0, 0, 0.355, 1.000]
+        }).then(function (elements) {
+            $(elements).removeClass('over').addClass('under');
+        });
+
+
+    };
+}]);
 
 angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function (scrollFn) {
     return {
@@ -827,6 +859,173 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
         link: function (scope, element, attrs) {
             $(element).on('click', function () {
                 $rootScope.$apply($location.path('home'));
+            });
+        }
+    }
+}]).directive('toggleChildren', [function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            $(element).on('click', function () {
+                $(this).children().animate({
+                    opacity: 'toggle',
+                    height: 'toggle'
+                }, 200);
+            });
+        }
+    }
+}]).directive('toggleSiblings', [function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            $(element).on('click', function () {
+                $(this).siblings().animate({
+                    opacity: 'toggle',
+                    height: 'toggle'
+                }, 200);
+            });
+        }
+    }
+}]).directive('fadeHeader', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            var img = new Image();
+            img.onload = function () {
+                $(element).prepend(img);
+                $.Velocity($('#header'), {
+                    opacity: 1.0
+                }, {
+                    duration: 400, easing: [0, 0, 0.355, 1.000]
+                });
+            }
+            img.src = "./images/header.svg";
+        }
+    }
+}).directive('fadeBody', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            $(window).on('load', function (event) {
+                $.Velocity($('body'), {
+                    opacity: 1.0
+                }, {
+                    duration: 400, easing: [0, 0, 0.355, 1.000]
+                });
+            });
+        }
+    }
+}).directive('fadeFront', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            $('.fadeBuffer.show').css('opacity', 0)
+                .prop('src', $scope.front)
+                .one('load', function (event) {
+                    $scope.isFading = true;
+                    $.Velocity.animate(event.target, {
+                        opacity: 1.0
+                    }, {
+                        duration: 400, easing: [0, 0, 0.355, 1.000]
+                    }).then(function (elements) {
+                        $(elements[0]).css('opacity', '').css('z-index', 14);
+                        $scope.isFading = false;
+                    });
+                });
+            $scope.$watch('front', function (newValue, oldValue) {
+                var active = $('.fadeBuffer.show'),
+                    inactive = $('.fadeBuffer.hide');
+                if (newValue === oldValue) {
+                    return;
+                }
+                if ($scope.isFading) {
+                    return;
+                }
+
+                inactive.prop('src', newValue);
+                inactive.one('load', function () {
+                    $scope.isFading = true;
+                    inactive.addClass('show').removeClass('hide');
+                    $.Velocity.animate(active, {
+                        opacity: 0.0
+                    }, {
+                        duration: 400,
+                        easing: [0, 0, 0.355, 1.000]
+                    }).then(function (elements) {
+                        inactive.css('z-index', 14);
+                        active.css('z-index', 13).css('opacity', '')
+                            .addClass('hide').removeClass('show')
+                            .prop('src', '');
+                        $scope.isFading = false;
+                    });
+                });
+            });
+        }
+    }
+
+}).directive('clickNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.bind("click", function () {
+                if (('/' + attrs.clickNav) == $location.path()) {
+                    return;
+                }
+                if (attrs.clickNav == 'media') {
+                    if (angular.element('#mediaMenu').hasClass('animate-hide')) {
+                        angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
+                    } else {
+                        angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
+                    }
+                } else {
+                    $('#mediaMenu .active').removeClass('active');
+                    angular.element('#mainMenu .active').removeClass('active');
+                    angular.element(element).addClass('active');
+                    angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
+                    $rootScope.fadePromise = $.Velocity.animate(
+                        document.getElementById('contentContainer'),
+                        { opacity: 0.0 },
+                        {
+                            duration: 400,
+                            easing: [0, 0, 0.355, 1.000],
+                            complete: function (elements) {
+                                $rootScope.$apply($location.path(attrs.clickNav));
+                            }
+                        }
+                    );
+                }
+
+            });
+        }
+    }
+}]).directive('mediaNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.bind("click", function () {
+                if (('/' + attrs.mediaNav) == $location.path()) {
+                    return;
+                }
+                if ($(element).parent().hasClass('animate-show')) {
+                    angular.element('#mainMenu .active').removeClass('active');
+                    angular.element('#mediaMenu .active').removeClass('active');
+                    angular.element(element).addClass('active');
+                    $('#content').addClass('animate-hide').removeClass('animate-show').bind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd", function (event) {
+                        $(event.currentTarget).unbind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd");
+                        $rootScope.$apply($location.path(attrs.mediaNav));
+                    });
+                }
+                $rootScope.fadePromise = $.Velocity.animate(
+                        document.getElementById('contentContainer'),
+                        { opacity: 0.0 },
+                        {
+                            duration: 400,
+                            easing: [0, 0, 0.355, 1.000],
+                            complete: function (elements) {
+                                $rootScope.$apply($location.path(attrs.mediaNav));
+                            }
+                        }
+                    );
             });
         }
     }
@@ -1271,202 +1470,11 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
             }
         }
     });
-}]).constant('menuEntries', ['home', 'about', 'schedule', 'media', 'press', 'contact'])
-.constant('fronts', ['./images/front0.jpg', './images/front1.jpg', './images/front2.jpg', './images/front3.jpg', './images/front4.jpg'])
-.constant('mediaPaths', ['music', 'videos', 'pictures'])
-.constant('mediaIcons', ['music', 'youtube-play', 'camera'])
-.controller('navigation', ['$scope', '$log', 'menuEntries', function ($scope, $log, menuEntries) {
+}]).controller('navigation', ['$scope', '$log', 'menuEntries', function ($scope, $log, menuEntries) {
     $scope.navs = menuEntries;
 }]).controller('mediaNav', ['$scope', '$log', 'mediaIcons', 'mediaPaths', function ($scope, $log, mediaIcons, mediaPaths) {
     $scope.mediaIcons = mediaIcons;
     $scope.mediaPaths = mediaPaths;
-}]).directive('toggleChildren', [function () {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            $(element).on('click', function () {
-                $(this).children().animate({
-                    opacity: 'toggle',
-                    height: 'toggle'
-                }, 200);
-            });
-        }
-    }
-}]).directive('toggleSiblings', [function () {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            $(element).on('click', function () {
-                $(this).siblings().animate({
-                    opacity: 'toggle',
-                    height: 'toggle'
-                }, 200);
-            });
-        }
-    }
-}]).service('toggleYT', ['ytPlayer', '$log', function (ytPlayer, $log) {
-    this.hide = function () {
-        angular.element('#front').removeClass('under').addClass('over').velocity("fadeIn", {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        });
-        if (angular.isDefined(ytPlayer.player)) {
-            ytPlayer.player.pauseVideo();
-        }
-    };
-    this.show = function () {
-        $.Velocity.animate(angular.element('#front'), 'fadeOut', {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        }).then(function (elements) {
-            $(elements).removeClass('over').addClass('under');
-        });
-
-
-    };
-}]).directive('fadeHeader', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            var img = new Image();
-            img.onload = function () {
-                $(element).prepend(img);
-                $.Velocity($('#header'), {
-                    opacity: 1.0
-                }, {
-                    duration: 400, easing: [0, 0, 0.355, 1.000]
-                });
-            }
-            img.src = "./images/header.svg";
-        }
-    }
-}).directive('fadeBody', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            $(window).on('load', function (event) {
-                $.Velocity($('body'), {
-                    opacity: 1.0
-                }, {
-                    duration: 400, easing: [0, 0, 0.355, 1.000]
-                });
-            });
-        }
-    }
-}).directive('fadeFront', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            $('.fadeBuffer.show').css('opacity', 0)
-                .prop('src', $scope.front)
-                .one('load', function (event) {
-                    $scope.isFading = true;
-                    $.Velocity.animate(event.target, {
-                        opacity: 1.0
-                    }, {
-                        duration: 400, easing: [0, 0, 0.355, 1.000]
-                    }).then(function (elements) {
-                        $(elements[0]).css('opacity', '').css('z-index', 14);
-                        $scope.isFading = false;
-                    });
-                });
-            $scope.$watch('front', function (newValue, oldValue) {
-                var active = $('.fadeBuffer.show'),
-                    inactive = $('.fadeBuffer.hide');
-                if (newValue === oldValue) {
-                    return;
-                }
-                if ($scope.isFading) {
-                    return;
-                }
-
-                inactive.prop('src', newValue);
-                inactive.one('load', function () {
-                    $scope.isFading = true;
-                    inactive.addClass('show').removeClass('hide');
-                    $.Velocity.animate(active, {
-                        opacity: 0.0
-                    }, {
-                        duration: 400,
-                        easing: [0, 0, 0.355, 1.000]
-                    }).then(function (elements) {
-                        inactive.css('z-index', 14);
-                        active.css('z-index', 13).css('opacity', '')
-                            .addClass('hide').removeClass('show')
-                            .prop('src', '');
-                        $scope.isFading = false;
-                    });
-                });
-            });
-        }
-    }
-
-}).directive('clickNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            element.bind("click", function () {
-                if (('/' + attrs.clickNav) == $location.path()) {
-                    return;
-                }
-                if (attrs.clickNav == 'media') {
-                    if (angular.element('#mediaMenu').hasClass('animate-hide')) {
-                        angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
-                    } else {
-                        angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
-                    }
-                } else {
-                    $('#mediaMenu .active').removeClass('active');
-                    angular.element('#mainMenu .active').removeClass('active');
-                    angular.element(element).addClass('active');
-                    angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
-                    $rootScope.fadePromise = $.Velocity.animate(
-                        document.getElementById('contentContainer'),
-                        { opacity: 0.0 },
-                        {
-                            duration: 400,
-                            easing: [0, 0, 0.355, 1.000],
-                            complete: function (elements) {
-                                $rootScope.$apply($location.path(attrs.clickNav));
-                            }
-                        }
-                    );
-                }
-
-            });
-        }
-    }
-}]).directive('mediaNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            element.bind("click", function () {
-                if (('/' + attrs.mediaNav) == $location.path()) {
-                    return;
-                }
-                if ($(element).parent().hasClass('animate-show')) {
-                    angular.element('#mainMenu .active').removeClass('active');
-                    angular.element('#mediaMenu .active').removeClass('active');
-                    angular.element(element).addClass('active');
-                    $('#content').addClass('animate-hide').removeClass('animate-show').bind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd", function (event) {
-                        $(event.currentTarget).unbind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd");
-                        $rootScope.$apply($location.path(attrs.mediaNav));
-                    });
-                }
-                $rootScope.fadePromise = $.Velocity.animate(
-                        document.getElementById('contentContainer'),
-                        { opacity: 0.0 },
-                        {
-                            duration: 400,
-                            easing: [0, 0, 0.355, 1.000],
-                            complete: function (elements) {
-                                $rootScope.$apply($location.path(attrs.mediaNav));
-                            }
-                        }
-                    );
-            });
-        }
-    }
 }]).controller('homeCtrl', ['$scope', 'homeResource', 'list', '$q', function ($scope, homeResource, list, $q) {
     var def = $q.defer();
     var countCb = function (result) {
@@ -1875,12 +1883,6 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
         }
         scrollFn.restore();
     });
-}]).directive('dateString', ['getGoogleCalendar', function (getGoogleCalendar) {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-        }
-    }
 }])
 .controller('calendar', ['$scope', '$location', '$timeout', 'days', 'calendarWidget', 'getGoogleCalendar', 'scrollFn', function ($scope, $location, $timeout, days, calendarWidget, getGoogleCalendar, scrollFn) {
     var date = new Date();
