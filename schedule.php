@@ -6,7 +6,7 @@
     <div class="eventLocation" ng-bind="event.location"></div>
     <div class="eventDescription" ng-bind="describeEvent(event)"></div>
     <div class="leftpad">
-      "<a ng-href="{{getLink(event)}}" ng-show="getLink(event)">link to more details...</a>
+      <a ng-href="{{getLink(event)}}" ng-show="getLink(event)">link to more details...</a>
     </div>
   </li>
 </ul>
