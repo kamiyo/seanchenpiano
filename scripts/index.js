@@ -587,23 +587,25 @@ angular.module('rootServices', ['constants'])
     }
 }]).service('toggleYT', ['ytPlayer', '$log', function (ytPlayer, $log) {
     this.hide = function () {
-        angular.element('#front').removeClass('under').addClass('over').velocity("fadeIn", {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        });
+        if ($('#front').hasClass('under')) {
+            $('#front').removeClass('under').addClass('over').velocity("fadeIn", {
+                duration: 400,
+                easing: [0, 0, 0.355, 1.000]
+            });
+        }
         if (angular.isDefined(ytPlayer.player)) {
             ytPlayer.player.pauseVideo();
         }
     };
     this.show = function () {
-        $.Velocity.animate(angular.element('#front'), 'fadeOut', {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        }).then(function (elements) {
-            $(elements).removeClass('over').addClass('under');
-        });
-
-
+        if ($('#front').hasClass('over')) {
+            $.Velocity.animate($('#front'), 'fadeOut', {
+                duration: 400,
+                easing: [0, 0, 0.355, 1.000]
+            }).then(function (elements) {
+                $(elements).removeClass('over').addClass('under');
+            });
+        }
     };
 }]);
 
