@@ -290,10 +290,9 @@ a {
 
     #vList li {
         position: relative;
-        border-left: 1px solid #a5a5a5;
+        border-left: 10px solid #a5a5a5;
         border-right: 1px solid #a5a5a5;
-        border-top: 1px solid #a5a5a5;
-        margin: 0px;
+        margin-top: 5px;
         padding: 5px;
         background-color: #F1F1F1;
         -webkit-transition: all 200ms linear;
@@ -306,6 +305,8 @@ a {
         #vList li:hover {
             cursor: pointer;
             background-color: #FFFFFF;
+			border-left: 10px solid #a73115;
+        	border-right: 1px solid #a73115;
             -webkit-box-shadow: inset 0px 0px 4px 2px #f1f1f1;
             -moz-box-shadow: inset 0px 0px 4px 2px #f1f1f1;
             box-shadow: inset 0px 0px 4px 2px #F1f1f1;
@@ -555,15 +556,14 @@ div.musicHover {
 
 #calendarSwitch {
     position: relative;
-    height: 250px;
     width: 315px;
+	padding-bottom: 10px;
 }
 
 #calendarContainer {
     text-align: center;
     border: 1px solid;
     padding: 5px 0 5px 0;
-    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -571,7 +571,6 @@ div.musicHover {
 }
 
 #calendarList {
-    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -826,6 +825,7 @@ div.musicHover {
 
 #biography p {
     text-indent: 15px;
+	font-size: 18px;
 }
 
 #press img {

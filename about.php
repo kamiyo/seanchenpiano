@@ -12,54 +12,55 @@
 
   </div>
 </div>
-<div toggle-siblings="" class="heading aboutList">Discography</div>
-<div class="discList">
-  <div class="discog" ng-repeat="item in disc | orderBy:'date':true">
-    <img ng-src="/images/discography/{{item.img}}" />
-    <table class="discOver">
-      <tr>
-        <td class="{{hasLink(item.google)}}">
-          <a ng-show="{{hasLink(item.google)}}" ng-href="{{item.google}}">
-            <img ng-src="/images/google.svg" />
-          </a>
-        </td>
-        <td class="{{hasLink(item.itunes)}}">
-          <a ng-show="{{hasLink(item.itunes)}}" ng-href="{{item.itunes}}">
-            <img ng-src="/images/itunes.svg" />
-          </a>
-        </td>
-        <td class="{{hasLink(item.xbox)}}">
-          <a ng-show="{{hasLink(item.xbox)}}" ng-href="{{item.xbox}}">
-            <img ng-src="/images/xbox.svg" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td class="{{hasLink(item.arkiv)}}">
-          <a ng-show="{{hasLink(item.arkiv)}}" ng-href="{{item.arkiv}}">
-            <img ng-src="/images/arkiv.svg" />
-          </a>
-        </td>
-        <td class="{{hasLink(item.spotify)}}">
-          <a ng-show="{{hasLink(item.spotify)}}" ng-href="{{item.spotify}}">
-            <img ng-src="/images/spotify.svg" />
-          </a>
-        </td>
-        <td class="{{hasLink(item.amazon)}}">
-          <a ng-show="{{hasLink(item.amazon)}}" ng-href="{{item.amazon}}">
-            <img ng-src="/images/amazon.svg" />
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </table>
-  </div>
+	<div>
+	<div toggle-siblings="" class="heading aboutList">Discography</div>
+	<div class="discList">
+	  <div class="discog" ng-repeat="item in disc | orderBy:'date':true">
+		<img ng-src="/images/discography/{{item.img}}" />
+		<table class="discOver">
+		  <tr>
+			<td class="{{hasLink(item.google)}}">
+			  <a ng-show="{{hasLink(item.google)}}" ng-href="{{item.google}}">
+				<img ng-src="/images/google.svg" />
+			  </a>
+			</td>
+			<td class="{{hasLink(item.itunes)}}">
+			  <a ng-show="{{hasLink(item.itunes)}}" ng-href="{{item.itunes}}">
+				<img ng-src="/images/itunes.svg" />
+			  </a>
+			</td>
+			<td class="{{hasLink(item.xbox)}}">
+			  <a ng-show="{{hasLink(item.xbox)}}" ng-href="{{item.xbox}}">
+				<img ng-src="/images/xbox.svg" />
+			  </a>
+			</td>
+		  </tr>
+		  <tr>
+			<td class="{{hasLink(item.arkiv)}}">
+			  <a ng-show="{{hasLink(item.arkiv)}}" ng-href="{{item.arkiv}}">
+				<img ng-src="/images/arkiv.svg" />
+			  </a>
+			</td>
+			<td class="{{hasLink(item.spotify)}}">
+			  <a ng-show="{{hasLink(item.spotify)}}" ng-href="{{item.spotify}}">
+				<img ng-src="/images/spotify.svg" />
+			  </a>
+			</td>
+			<td class="{{hasLink(item.amazon)}}">
+			  <a ng-show="{{hasLink(item.amazon)}}" ng-href="{{item.amazon}}">
+				<img ng-src="/images/amazon.svg" />
+			  </a>
+			</td>
+		  </tr>
+		  <tr>
+			<td></td>
+			<td></td>
+			<td></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
 </div>
-
 
 
 <div ng-repeat="mlist in repList">

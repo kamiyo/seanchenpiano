@@ -115,7 +115,7 @@ if ($uri == "/about") {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div>
                 <div id="twitterLabel" class="heading">Twitter</div>
                 <div id="twitterBox" ng-controller="twitterCtrl">
                     <ul>

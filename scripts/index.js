@@ -1,6 +1,6 @@
 // Gapi functions
 
-angular.module('services.Gapi', [])
+var gapiapp = angular.module('services.Gapi', [])
     .constant('gapiUrl', 'https://apis.google.com/js/client.js')
     .service('Gapi', ['$rootScope', '$q', '$log', '$window', 'gapiUrl',
         function ($rootScope, $q, $log, $window, gapiUrl) {
@@ -48,7 +48,7 @@ angular.module('services.Gapi', [])
             };
         }]);
 
-angular.module('google', ['services.Gapi'])
+var google = angular.module('google', ['services.Gapi'])
     .constant('apiKey', 'AIzaSyBJm8pj4Ejqw8rHJVgk_0s6w1HlB6RfZ34')
     .run(function (Gapi, apiKey) {
         var self = Gapi;
@@ -148,7 +148,7 @@ angular.module('services.getGoogleCalendar', [
     }]);
 
 
-angular.module('googleCalendar', [
+var cal = angular.module('googleCalendar', [
     'services.getGoogleCalendar'
 ]);
 
@@ -197,7 +197,7 @@ angular.module('services.calendarWidget', [])
 
 // MUSIC PLAYER
 
-angular.module('mp', ['services.musicPlayer'])
+var mp = angular.module('mp', ['services.musicPlayer'])
 
 angular.module('services.musicPlayer', [])
     .constant('swfUrl', './scripts/swf/')
@@ -361,10 +361,11 @@ angular.module('services.musicPlayer', [])
 
 // YOUTUBE PLAYER LOADER
 
-angular.module('youtube', [])
-.constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com')
-.constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9')
-.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
+var yt = angular.module('yt', []);
+yt.constant('apiUrl', 'http://www.youtube.com/iframe_api?wmode=opaque&origin=http://seanchenpiano.com');
+yt.constant('playlist', 'PLzauXr_FKIlhzArviStMMK08Xc4iuS0n9');
+
+yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
     function ($rootScope, $q, $log, $location, apiUrl) {
         var self = this;
 
@@ -414,8 +415,9 @@ angular.module('youtube', [])
 
 // YOUTUBE PLAYLIST LOADER
 
-angular.module('vloader', ['google'])
-.value('requestParams', {
+var loader = angular.module('vloader', ['google']);
+
+loader.value('requestParams', {
     'path': 'youtube/v3/playlistItems',
     'params': {
         'part': 'id, snippet',
@@ -427,7 +429,9 @@ angular.module('vloader', ['google'])
     'params': {
         'part': 'contentDetails, statistics'
     }
-}).service('getVideos', function ($rootScope, $log, $q, Gapi, requestParams, statsParams) {
+});
+
+loader.service('getVideos', function ($rootScope, $log, $q, Gapi, requestParams, statsParams) {
     this.scope = $rootScope;
     this.prevTitle = "";
     this.lastToken = "";
@@ -436,6 +440,7 @@ angular.module('vloader', ['google'])
     this.lastIndex = 0;
     this.nextCount = 0;
     this.vidList = "";
+    //this.order;
     this.vidDefer = null;
     this.getting = false;
 
@@ -444,7 +449,7 @@ angular.module('vloader', ['google'])
         return getting;
     };
 
-    this.reset = function () {
+    this.reset = function() {
         $log.log('reset');
         prevTitle = "";
         lastToken = "";
@@ -477,11 +482,10 @@ angular.module('vloader', ['google'])
 
             var statsReq = angular.copy(statsParams);
             statsReq.params.id = vidList;
+            //$log.log('getting stats', statsReq);
             return Gapi.request(statsReq).then(function (statsResponse) {
-
-                // Use moment.js?
+                //$log.log('received stats', statsResponse);
                 for (var i = 0; i < statsResponse.items.length; i++) {
-                    // try to use one regex: PT(\d*)H?(\d*)M?(\d*)S
                     reg0 = /PT(\d+)H(\d+)M(\d+)S/;
                     reg1 = /PT(\d+)M(\d+)S/;
                     reg2 = /PT(\d+)M/;
@@ -519,53 +523,25 @@ angular.module('vloader', ['google'])
     };
 });
 
-// constants
-
-angular.module('constants', [])
-.constant('velocityEasing', { duration: 400, easing: [0, 0, 0.355, 1.000] })
-.constant('menuEntries', ['home', 'about', 'schedule', 'media', 'press', 'contact'])
-.constant('fronts', ['./images/front0.jpg', './images/front1.jpg', './images/front2.jpg', './images/front3.jpg', './images/front4.jpg'])
-.constant('mediaPaths', ['music', 'videos', 'pictures'])
-.constant('mediaIcons', ['music', 'youtube-play', 'camera'])
-
-// filters
-
-angular.module('filters', [])
+angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'services.getGoogleCalendar', 'services.calendarWidget', 'yt', 'JSONresources', 'mp', 'services.parseEventTime'])
+.value('$anchorScroll', angular.noop)
 .filter('reverse', function () {
     return function (items) {
         return items.slice().reverse();
     };
-})
-
-// root module
-
-angular.module('root', [
-    'ngRoute',
-    'ngSanitize',
-    'vloader',
-    'services.getGoogleCalendar',
-    'services.calendarWidget',
-    'youtube', 'JSONresources',
-    'mp',
-    'services.parseEventTime',
-    'constants',
-    'filters',
-    'rootServices'
-]).value('$anchorScroll', angular.noop);
-
-// root services
-
-angular.module('rootServices', ['constants'])
-.service('ytInit', ['$location', 'velocityEasing', function ($location, velocityEasing) {
+}).service('ytInit', ['$location', 'ytPlayer', function ($location, ytPlayer) {
     if ($location.search().video) {
-        $('#player').velocity("fadeIn", velocityEasing);
+        angular.element('#player').velocity("fadeIn", {
+            duration: 400,
+            easing: [0, 0, 0.355, 1.000]
+        });
     }
 }]).service('deferrer', ['$rootScope', '$q', function ($rootScope, $q) {
     this.scope = $rootScope;
     this.q = $q;
     this.loaded = this.q.defer();
     this.ready = this.loaded.promise;
-}]).service('scrollFn', [function () {
+}]).service('scrollFn', function () {
     var self = this;
     this.prev = 0;
     this.fn = function (top) {
@@ -585,75 +561,53 @@ angular.module('rootServices', ['constants'])
     this.save = function () {
         self.prev = $(window).scrollTop();
     }
-}]).service('toggleYT', ['ytPlayer', '$log', function (ytPlayer, $log) {
-    this.hide = function () {
-        angular.element('#front').removeClass('under').addClass('over').velocity("fadeIn", {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        });
-        if (angular.isDefined(ytPlayer.player)) {
-            ytPlayer.player.pauseVideo();
-        }
-    };
-    this.show = function () {
-        $.Velocity.animate(angular.element('#front'), 'fadeOut', {
-            duration: 400,
-            easing: [0, 0, 0.355, 1.000]
-        }).then(function (elements) {
-            $(elements).removeClass('over').addClass('under');
-        });
-
-
-    };
-}]);
-
-angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function (scrollFn) {
+}).directive('scrollUp', ['scrollFn', function (scrollFn) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).on("click", function () { scrollFn.fn(); });
+            element.bind("click", function () { scrollFn.fn(); });
         }
     }
-    // CHECK THE INFINITE SCROLLS WORK
-}]).directive('infinite', ['$window', 'getVideos', function ($window, getVideos) {
+}]).directive('infinite', ['$rootScope', '$window', '$log', 'getVideos', function ($rootScope, $window, $log, getVideos) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $($window).on('scroll.infinite', function () {
+            $rootScope.infinite = function () {
                 var win = $(this)[0];
                 if (win.innerHeight + win.pageYOffset >= ($('#videos').outerHeight() + $('#videos').offset().top) * 0.8) {
                     if (scope.moreToLoad && !getVideos.isGetting()) {
                         scope.getVids();
                     }
                 }
-            });
+            };
+            $($window).bind('scroll.infinite', $rootScope.infinite);
         }
     }
-}]).directive('homeInfinite', ['$window', function ($window) {
+}]).directive('homeInfinite', ['$rootScope', '$window', '$log', function ($rootScope, $window, $log) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $($window).on('scroll.infinite', function () {
+            $($window).bind('scroll.infinite', function () {
                 var win = $(this)[0];
                 if (win.innerHeight + win.pageYOffset >= $('#blogContainer').outerHeight() * 0.8) {
                     scope.getMorePosts();
                 }
             });
+
         }
     }
-    // CHECK INFINITE SCROLLS ^
-}]).directive('clickVideo', ['musicPlayer', 'getVideos', 'ytPlayer', 'toggleYT', 'scrollFn', function (musicPlayer, getVideos, ytPlayer, toggleYT, scrollFn) {
+}]).directive('clickVideo', ['$rootScope', '$log', 'musicPlayer', 'getVideos', 'ytPlayer', 'toggleYT', 'scrollFn', function ($rootScope, $log, musicPlayer, getVideos, ytPlayer, toggleYT, scrollFn) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).on("click", function (e) {
+            element.bind("click", function (e) {
                 value = attrs.clickVideo;
-                $('.items.active').removeClass('active');
-                $(element).addClass('active');
+                angular.element('.items.active').removeClass('active');
+                angular.element(element).addClass('active');
                 if (musicPlayer.sound && (musicPlayer.sound.playState == 1)) {
                     $('.icon-pause').trigger('click');
                 }
-                thePlayer = $('#player');
+                thePlayer = angular.element('#player');
                 toggleYT.show();
                 ytPlayer.loadVideo(value);
                 scrollFn.fn();
@@ -664,7 +618,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).on("load", function (e) {
+            element.bind("load", function (e) {
                 $timeout(function () {
                     deferrer.loaded.resolve();
                     deferrer.scope.$digest();
@@ -672,7 +626,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             });
         }
     }
-}]).directive('bindMusic', ['$rootScope', 'musicPlayer', function ($rootScope, musicPlayer) {
+}]).directive('bindMusic', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -687,7 +641,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
                 }
             }
             if ($.isArray(scope.music.movements) == true) {
-                $(element).on("click", function (e) {
+                element.bind("click", function (e) {
                     $(element).siblings('ul').animate({
                         opacity: 'toggle',
                         height: 'toggle'
@@ -700,7 +654,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
                     }
                 });
             } else {
-                $(element).on("click", function (e) {
+                element.bind("click", function (e) {
                     $('#mainFooter').removeClass('animate-hide hide').addClass('animate-show show');
                     wasClicked = false;
                     if ($(element).hasClass('active')) {
@@ -719,7 +673,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             }
         }
     }
-}]).directive('seekDrag', ['musicPlayer', function (musicPlayer) {
+}]).directive('seekDrag', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -747,7 +701,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             });
         }
     }
-}]).directive('volumeDrag', ['musicPlayer', function (musicPlayer) {
+}]).directive('volumeDrag', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -778,7 +732,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             });
         }
     }
-}]).directive('toggleMute', ['musicPlayer', function (musicPlayer) {
+}]).directive('toggleMute', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -795,7 +749,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             });
         }
     }
-}]).directive('bindMovement', ['musicPlayer', function (musicPlayer) {
+}]).directive('bindMovement', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
@@ -813,7 +767,7 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
                     }, 200);
                 }
             }
-            $(element).on('click', function () {
+            $(element).bind('click', function () {
                 $('#mainFooter').removeClass('animate-hide hide').addClass('animate-show show');
                 wasClicked = false;
                 if ($(element).hasClass('active')) {
@@ -835,11 +789,11 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
             });
         }
     }
-}]).directive('triggerClick', ['musicPlayer', function (musicPlayer) {
+}]).directive('triggerClick', ['$log', '$rootScope', 'musicPlayer', function ($log, $rootScope, musicPlayer) {
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).on('click', function () {
+            $(element).bind('click', function () {
                 if (($('.musicHover.active').length == 0) && ($('.musicHover.paused').length == 0)) {
                     musicPlayer.sound.togglePause();
                 }
@@ -857,181 +811,12 @@ angular.module('rootDirectives', []).directive('scrollUp', ['scrollFn', function
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            $(element).on('click', function () {
+            $(element).bind('click', function () {
                 $rootScope.$apply($location.path('home'));
             });
         }
     }
-}]).directive('toggleChildren', [function () {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            $(element).on('click', function () {
-                $(this).children().animate({
-                    opacity: 'toggle',
-                    height: 'toggle'
-                }, 200);
-            });
-        }
-    }
-}]).directive('toggleSiblings', [function () {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            $(element).on('click', function () {
-                $(this).siblings().animate({
-                    opacity: 'toggle',
-                    height: 'toggle'
-                }, 200);
-            });
-        }
-    }
-}]).directive('fadeHeader', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            var img = new Image();
-            img.onload = function () {
-                $(element).prepend(img);
-                $.Velocity($('#header'), {
-                    opacity: 1.0
-                }, {
-                    duration: 400, easing: [0, 0, 0.355, 1.000]
-                });
-            }
-            img.src = "./images/header.svg";
-        }
-    }
-}).directive('fadeBody', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            $(window).on('load', function (event) {
-                $.Velocity($('body'), {
-                    opacity: 1.0
-                }, {
-                    duration: 400, easing: [0, 0, 0.355, 1.000]
-                });
-            });
-        }
-    }
-}).directive('fadeFront', function () {
-    return {
-        restrict: 'A',
-        link: function ($scope, element, attrs) {
-            $('.fadeBuffer.show').css('opacity', 0)
-                .prop('src', $scope.front)
-                .one('load', function (event) {
-                    $scope.isFading = true;
-                    $.Velocity.animate(event.target, {
-                        opacity: 1.0
-                    }, {
-                        duration: 400, easing: [0, 0, 0.355, 1.000]
-                    }).then(function (elements) {
-                        $(elements[0]).css('opacity', '').css('z-index', 14);
-                        $scope.isFading = false;
-                    });
-                });
-            $scope.$watch('front', function (newValue, oldValue) {
-                var active = $('.fadeBuffer.show'),
-                    inactive = $('.fadeBuffer.hide');
-                if (newValue === oldValue) {
-                    return;
-                }
-                if ($scope.isFading) {
-                    return;
-                }
-
-                inactive.prop('src', newValue);
-                inactive.one('load', function () {
-                    $scope.isFading = true;
-                    inactive.addClass('show').removeClass('hide');
-                    $.Velocity.animate(active, {
-                        opacity: 0.0
-                    }, {
-                        duration: 400,
-                        easing: [0, 0, 0.355, 1.000]
-                    }).then(function (elements) {
-                        inactive.css('z-index', 14);
-                        active.css('z-index', 13).css('opacity', '')
-                            .addClass('hide').removeClass('show')
-                            .prop('src', '');
-                        $scope.isFading = false;
-                    });
-                });
-            });
-        }
-    }
-
-}).directive('clickNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            element.bind("click", function () {
-                if (('/' + attrs.clickNav) == $location.path()) {
-                    return;
-                }
-                if (attrs.clickNav == 'media') {
-                    if (angular.element('#mediaMenu').hasClass('animate-hide')) {
-                        angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
-                    } else {
-                        angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
-                    }
-                } else {
-                    $('#mediaMenu .active').removeClass('active');
-                    angular.element('#mainMenu .active').removeClass('active');
-                    angular.element(element).addClass('active');
-                    angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
-                    $rootScope.fadePromise = $.Velocity.animate(
-                        document.getElementById('contentContainer'),
-                        { opacity: 0.0 },
-                        {
-                            duration: 400,
-                            easing: [0, 0, 0.355, 1.000],
-                            complete: function (elements) {
-                                $rootScope.$apply($location.path(attrs.clickNav));
-                            }
-                        }
-                    );
-                }
-
-            });
-        }
-    }
-}]).directive('mediaNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
-    return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            element.bind("click", function () {
-                if (('/' + attrs.mediaNav) == $location.path()) {
-                    return;
-                }
-                if ($(element).parent().hasClass('animate-show')) {
-                    angular.element('#mainMenu .active').removeClass('active');
-                    angular.element('#mediaMenu .active').removeClass('active');
-                    angular.element(element).addClass('active');
-                    $('#content').addClass('animate-hide').removeClass('animate-show').bind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd", function (event) {
-                        $(event.currentTarget).unbind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd");
-                        $rootScope.$apply($location.path(attrs.mediaNav));
-                    });
-                }
-                $rootScope.fadePromise = $.Velocity.animate(
-                        document.getElementById('contentContainer'),
-                        { opacity: 0.0 },
-                        {
-                            duration: 400,
-                            easing: [0, 0, 0.355, 1.000],
-                            complete: function (elements) {
-                                $rootScope.$apply($location.path(attrs.mediaNav));
-                            }
-                        }
-                    );
-            });
-        }
-    }
-}]);
-
-angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '$scope', '$log', '$window', 'getVideos', '$timeout', 'ytPlayer', 'toggleYT', 'list', function ($rootScope, $scope, $log, $window, getVideos, $timeout, ytPlayer, toggleYT, list) {
+}]).controller('videoLister', ['$rootScope', '$scope', '$log', '$window', 'getVideos', '$timeout', 'ytPlayer', 'toggleYT', 'list', function ($rootScope, $scope, $log, $window, getVideos, $timeout, ytPlayer, toggleYT, list) {
     $scope.videos = [];
     if (!ytPlayer.player) {
         ytPlayer.init();
@@ -1040,7 +825,9 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
         toggleYT.show();
     }
     angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
-    $('#mediaMenu .nav[media-nav*="video"]').addClass('active');
+    $('#mediaMenu .nav[media-nav="videos"]').addClass('active');
+	$('#mediaMenu .nav[media-nav!="videos"]').removeClass('active');
+	$('#mainMenu .nav[click-nav!="media"]').removeClass('active');
     $scope.videos = list;
 
     $scope.moreToLoad = true;
@@ -1163,6 +950,7 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
                     }
                     soloD.resolve(result);
                 };
+
 
                 var chamberCb = function (result) {
                     for (var key in result) {
@@ -1470,11 +1258,203 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
             }
         }
     });
-}]).controller('navigation', ['$scope', '$log', 'menuEntries', function ($scope, $log, menuEntries) {
+}]).constant('menuEntries', ['home', 'about', 'schedule', 'media', 'press', 'contact'])
+.constant('fronts', ['./images/front0.jpg', './images/front1.jpg', './images/front2.jpg', './images/front3.jpg', './images/front4.jpg'])
+.constant('mediaPaths', ['music', 'videos', 'pictures'])
+.constant('mediaIcons', ['music', 'youtube-play', 'camera'])
+.controller('navigation', ['$scope', '$log', 'menuEntries', function ($scope, $log, menuEntries) {
     $scope.navs = menuEntries;
 }]).controller('mediaNav', ['$scope', '$log', 'mediaIcons', 'mediaPaths', function ($scope, $log, mediaIcons, mediaPaths) {
     $scope.mediaIcons = mediaIcons;
     $scope.mediaPaths = mediaPaths;
+}]).directive('toggleChildren', [function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            $(element).on('click', function () {
+                $(this).children().animate({
+                    opacity: 'toggle',
+                    height: 'toggle'
+                }, 200);
+            });
+        }
+    }
+}]).directive('toggleSiblings', [function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            $(element).on('click', function () {
+                $(this).siblings().animate({
+                    opacity: 'toggle',
+                    height: 'toggle'
+                }, 200);
+            });
+        }
+    }
+}]).service('toggleYT', ['ytPlayer', '$log', function (ytPlayer, $log) {
+    this.hide = function () {
+        angular.element('#front').removeClass('under').addClass('over').velocity("fadeIn", {
+            duration: 400,
+            easing: [0, 0, 0.355, 1.000]
+        });
+        if (angular.isDefined(ytPlayer.player)) {
+            ytPlayer.player.pauseVideo();
+        }
+    };
+    this.show = function () {
+        $.Velocity.animate(angular.element('#front'), 'fadeOut', {
+            duration: 400,
+            easing: [0, 0, 0.355, 1.000]
+        }).then(function (elements) {
+            $(elements).removeClass('over').addClass('under');
+        });
+
+
+    };
+}]).directive('fadeHeader', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            var img = new Image();
+            img.onload = function () {
+                $(element).prepend(img);
+                $.Velocity($('#header'), {
+                    opacity: 1.0
+                }, {
+                    duration: 400, easing: [0, 0, 0.355, 1.000]
+                });
+            }
+            img.src = "./images/header.svg";
+        }
+    }
+}).directive('fadeBody', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            $(window).on('load', function (event) {
+                $.Velocity($('body'), {
+                    opacity: 1.0
+                }, {
+                    duration: 400, easing: [0, 0, 0.355, 1.000]
+                });
+            });
+        }
+    }
+}).directive('fadeFront', function () {
+    return {
+        restrict: 'A',
+        link: function ($scope, element, attrs) {
+            $('.fadeBuffer.show').css('opacity', 0)
+                .prop('src', $scope.front)
+                .one('load', function (event) {
+                    $scope.isFading = true;
+                    $.Velocity.animate(event.target, {
+                        opacity: 1.0
+                    }, {
+                        duration: 400, easing: [0, 0, 0.355, 1.000]
+
+                    }).then(function (elements) {
+                        $(elements[0]).css('opacity', '').css('z-index', 14);
+                        $scope.isFading = false;
+                    });
+                });
+            $scope.$watch('front', function (newValue, oldValue) {
+                var active = $('.fadeBuffer.show'),
+                    inactive = $('.fadeBuffer.hide');
+                if (newValue === oldValue) {
+                    return;
+                }
+                if ($scope.isFading) {
+                    return;
+                }
+
+                inactive.prop('src', newValue);
+                inactive.one('load', function () {
+                    $scope.isFading = true;
+                    inactive.addClass('show').removeClass('hide');
+                    $.Velocity.animate(active, {
+                        opacity: 0.0
+                    }, {
+                        duration: 400,
+                        easing: [0, 0, 0.355, 1.000]
+                    }).then(function (elements) {
+                        inactive.css('z-index', 14);
+                        active.css('z-index', 13).css('opacity', '')
+                            .addClass('hide').removeClass('show')
+                            .prop('src', '');
+                        $scope.isFading = false;
+                    });
+                });
+            });
+        }
+    }
+
+}).directive('clickNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.bind("click", function () {
+                if (('/' + attrs.clickNav) == $location.path()) {
+                    return;
+                }
+                if (attrs.clickNav == 'media') {
+                    if (angular.element('#mediaMenu').hasClass('animate-hide')) {
+                        angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
+                    } else {
+                        angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
+                    }
+                } else {
+                    angular.element('#mediaMenu .active').removeClass('active');
+                    angular.element('#mainMenu .active').removeClass('active');
+                    angular.element(element).addClass('active');
+                    angular.element('#mediaMenu').removeClass('animate-show').addClass('animate-hide');
+                    $rootScope.fadePromise = $.Velocity.animate(
+                        document.getElementById('contentContainer'),
+                        { opacity: 0.0 },
+                        {
+                            duration: 400,
+                            easing: [0, 0, 0.355, 1.000],
+                            complete: function (elements) {
+                                $rootScope.$apply($location.path(attrs.clickNav));
+                            }
+                        }
+                    );
+                }
+
+            });
+        }
+    }
+}]).directive('mediaNav', ['$rootScope', '$log', '$location', function ($rootScope, $log, $location) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            element.bind("click", function () {
+                if (('/' + attrs.mediaNav) == $location.path()) {
+                    return;
+                }
+                if ($(element).parent().hasClass('animate-show')) {
+                    angular.element('#mainMenu .active').removeClass('active');
+                    angular.element('#mediaMenu .active').removeClass('active');
+                    angular.element(element).addClass('active');
+                    $('#content').addClass('animate-hide').removeClass('animate-show').bind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd", function (event) {
+                        $(event.currentTarget).unbind("webkitTransitionEnd oTransitionEnd otransitionend transitionend msTransitionEnd");
+                        $rootScope.$apply($location.path(attrs.mediaNav));
+                    });
+                }
+                $rootScope.fadePromise = $.Velocity.animate(
+                        document.getElementById('contentContainer'),
+                        { opacity: 0.0 },
+                        {
+                            duration: 400,
+                            easing: [0, 0, 0.355, 1.000],
+                            complete: function (elements) {
+                                $rootScope.$apply($location.path(attrs.mediaNav));
+                            }
+                        }
+                    );
+            });
+        }
+    }
 }]).controller('homeCtrl', ['$scope', 'homeResource', 'list', '$q', function ($scope, homeResource, list, $q) {
     var def = $q.defer();
     var countCb = function (result) {
@@ -1498,7 +1478,8 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
         return ((entry.likes || entry.comments) ? ' - ' : ' - go to facebook post') + ((entry.likes) ? (l.length + ' like' + ((l.length > 1) ? 's' : '')) : '') + ((entry.likes && entry.comments) ? ' and ' : '') + ((entry.comments) ? (c.length + ' comment' + ((c.length > 1) ? 's' : '')) : '');
     }
     $scope.blog = list;
-    $('#mainMenu .nav[click-nav*="home"]').addClass('active');
+    $('#mainMenu .nav[click-nav="home"]').addClass('active');
+	$('#mainMenu .nav[click-nav!="home"]').removeClass('active');
     $scope.isGetting = false;
 
     $scope.getMorePosts = function () {
@@ -1528,7 +1509,8 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
     }
 
 }]).controller('aboutCtrl', ['$scope', 'list', function ($scope, list) {
-    $('#mainMenu .nav[click-nav*="about"]').addClass('active');
+    $('#mainMenu .nav[click-nav="about"]').addClass('active');
+	$('#mainMenu .nav[click-nav!="about"]').removeClass('active');
     $scope.dir = ['right', 'right', 'right'];
     $scope.repList = [{}, {}, {}, {}, {}, {}];
     for (var i = 0; i < 6; i++) {
@@ -1570,7 +1552,9 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
 
 }]).controller('musicCtrl', ['$scope', '$q', '$log', 'toggleYT', 'list', '$window', 'musicPlayer', function ($scope, $q, $log, toggleYT, list, $window, scrollFn, musicPlayer) {
     angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
-    $('#mediaMenu .nav[media-nav*="music"]').addClass('active');
+    $('#mediaMenu .nav[media-nav="music"]').addClass('active');
+	$('#mediaMenu .nav[media-nav!="music"]').removeClass('active');
+	$('#mainMenu .nav[click-nav!="media"]').removeClass('active');
     $scope.list = {}
     $scope.list.concerti = list[0];
     $scope.list.soli = list[1];
@@ -1651,10 +1635,13 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
     }
 }]).controller('picturesCtrl', ['$scope', 'list', 'toggleYT', '$window', function ($scope, list, toggleYT, $window) {
     angular.element('#mediaMenu').removeClass('animate-hide').addClass('animate-show');
-    $('#mediaMenu .nav[media-nav*="pictures"]').addClass('active');
+    $('#mediaMenu .nav[media-nav="pictures"]').addClass('active');
+	$('#mediaMenu .nav[media-nav!="pictures"]').removeClass('active');
+	$('#mainMenu .nav[click-nav!="media"]').removeClass('active');
     $scope.pictures = list;
 }]).controller('scheduleCtrl', ['$scope', 'list', '$window', 'parseEventTime', function ($scope, list, $window, parseEventTime) {
-    $('#mainMenu .nav[click-nav*="schedule"]').addClass('active');
+    $('#mainMenu .nav[click-nav="schedule"]').addClass('active');
+	$('#mainMenu .nav[click-nav!="schedule"]').removeClass('active');
     $scope.list = list;
     $scope.parseTime = parseEventTime.string;
     $scope.describeEvent = function (event) {
@@ -1685,9 +1672,11 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
     }
 
 }]).controller('contactCtrl', ['$scope', 'getVideos', 'toggleYT', '$window', function ($scope, getVideos, toggleYT, $window) {
-    $('#mainMenu .nav[click-nav*="contact"]').addClass('active');
+    $('#mainMenu .nav[click-nav="contact"]').addClass('active');
+	$('#mainMenu .nav[click-nav!="contact"]').removeClass('active');
 }]).controller('pressCtrl', ['$scope', 'getVideos', 'list', '$window', function ($scope, getVideos, list, $window) {
-    $('#mainMenu .nav[click-nav*="press"]').addClass('active');
+    $('#mainMenu .nav[click-nav="press"]').addClass('active');
+	$('#mainMenu .nav[click-nav!="press"]').removeClass('active');
     $scope.pquotes = list;
 
     $scope.process = function (thing) {
@@ -1783,7 +1772,7 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
                         break;
                 }
                 def.promise.then(function () {
-                    if (next.$$route.templateUrl != "press.php")
+					if (typeof next.$$route === "undefined" || next.$$route.templateUrl != "press.php")
                         $('.quote').velocity("fadeIn", {
                             duration: 400, easing: [0, 0, 0.355, 1.000]
                         });
@@ -1883,6 +1872,12 @@ angular.module('rootControllers', []).controller('videoLister', ['$rootScope', '
         }
         scrollFn.restore();
     });
+}]).directive('dateString', ['getGoogleCalendar', function (getGoogleCalendar) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+        }
+    }
 }])
 .controller('calendar', ['$scope', '$location', '$timeout', 'days', 'calendarWidget', 'getGoogleCalendar', 'scrollFn', function ($scope, $location, $timeout, days, calendarWidget, getGoogleCalendar, scrollFn) {
     var date = new Date();
