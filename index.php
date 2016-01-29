@@ -115,7 +115,8 @@ if ($uri == "/about") {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div>
+
                 <div id="twitterLabel" class="heading">Twitter</div>
                 <div id="twitterBox" ng-controller="twitterCtrl">
                     <ul>
@@ -148,7 +149,7 @@ if ($uri == "/about") {
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script type="text/javascript">
 	if (typeof jQuery === 'undefined') {
-	    document.write(unescape("%3Cscript src='./cripts/jquery-1.11.3.min.js' type='text/javascript'%3E%3C/script%3E"));
+	    document.write(unescape("%3Cscript src='./scripts/jquery-1.11.3.min.js' type='text/javascript'%3E%3C/script%3E"));
 	}
 	</script>
 	<script type="text/javascript" src="./scripts/bluebird.min.js"></script>
@@ -159,6 +160,7 @@ if ($uri == "/about") {
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-sanitize.min.js"></script>
+	<script type="text/javascript" src="./scripts/angular-ui-router.min.js"></script>
 	<script type="text/javascript" src="./scripts/moment.min.js"></script>
 	<script type="text/javascript" src="./scripts/moment-timezone-with-data.js"></script>
 	<script type="text/javascript" src="./scripts/plugins.<?php echo time(); ?>.js"></script>
