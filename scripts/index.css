@@ -305,8 +305,8 @@ a {
         #vList li:hover {
             cursor: pointer;
             background-color: #FFFFFF;
-			border-left: 10px solid #a73115;
-        	border-right: 1px solid #a73115;
+            border-left: 10px solid #a73115;
+            border-right: 1px solid #a73115;
             -webkit-box-shadow: inset 0px 0px 4px 2px #f1f1f1;
             -moz-box-shadow: inset 0px 0px 4px 2px #f1f1f1;
             box-shadow: inset 0px 0px 4px 2px #F1f1f1;
@@ -557,7 +557,7 @@ div.musicHover {
 #calendarSwitch {
     position: relative;
     width: 315px;
-	padding-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 #calendarContainer {
@@ -790,14 +790,24 @@ div.musicHover {
     }
 
         #twitterBox a:hover {
-            color: #282828;
+            color: #a5a5a5;
         }
 
     #twitterBox ul li {
         overflow: auto;
+        border-left: 3px solid transparent;
         border-bottom: 1px solid;
         margin-bottom: 10px;
+        -webkit-transition: all 200ms linear;
+        -moz-transition: all 200ms linear;
+        -ms-transition: all 200ms linear;
+        -o-transition: all 200ms linear;
+        transition: all 200ms linear;
     }
+
+        #twitterBox ul li:hover {
+            border-left: 3px solid #FFFFFF;
+        }
 
 #twitterLabel {
     padding-left: 15px;
@@ -805,10 +815,12 @@ div.musicHover {
 
 .twitterName {
     font-size: 1.1em;
+    padding-left: 2px;
 }
 
 .twitterSN {
     float: left;
+    padding-left: 5px;
 }
 
 .twitterImg {
@@ -825,7 +837,7 @@ div.musicHover {
 
 #biography p {
     text-indent: 15px;
-	font-size: 18px;
+    font-size: 18px;
 }
 
 #press img {

@@ -160,7 +160,7 @@ if ($uri == "/about") {
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-sanitize.min.js"></script>
-	<script type="text/javascript" src="./scripts/angular-ui-router.min.js"></script>
+	<!--<script type="text/javascript" src="./scripts/angular-ui-router.min.js"></script>-->
 	<script type="text/javascript" src="./scripts/moment.min.js"></script>
 	<script type="text/javascript" src="./scripts/moment-timezone-with-data.js"></script>
 	<script type="text/javascript" src="./scripts/plugins.<?php echo time(); ?>.js"></script>

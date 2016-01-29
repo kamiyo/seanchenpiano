@@ -398,14 +398,22 @@ yt.service('ytPlayer', ['$rootScope', '$q', '$log', '$location', 'apiUrl',
             $.getScript(apiUrl);
         }
 
-        this.loadVideo = function (vId) {
+        this.loadVideo = function (vId) {            
             if (typeof (self.player) === 'undefined') {
                 $log.log('waiting');
                 self.loaded.promise.then(function () {
-                    self.player.loadVideoById(vId);
+                    if (vId == "R8uLQZt2334") {
+                        self.player.loadVideoById(vId, 205, 1980);
+                    } else {
+                        self.player.loadVideoById(vId);
+                    }
                 });
             } else {
-                self.player.loadVideoById(vId);
+                if (vId == "R8uLQZt2334") {
+                    self.player.loadVideoById(vId, 205, 1980);
+                } else {
+                    self.player.loadVideoById(vId);
+                }
             }
         };
         this.getQualities = function () {
@@ -532,7 +540,7 @@ ROOT ROOT ROOT ROOT ROOT ROOT
 */
 
 
-var root = angular.module('root', ['ui.router', 'ngSanitize', 'vloader', 'services.getGoogleCalendar', 'services.calendarWidget', 'yt', 'JSONresources', 'mp', 'services.parseEventTime'])
+var root = angular.module('root', ['ngRoute', 'ngSanitize', 'vloader', 'services.getGoogleCalendar', 'services.calendarWidget', 'yt', 'JSONresources', 'mp', 'services.parseEventTime'])
 .value('$anchorScroll', angular.noop)
 .constant('menuEntries', ['home', 'about', 'schedule', 'media', 'press', 'contact'])
 .constant('fronts', ['./images/front0.jpg', './images/front1.jpg', './images/front2.jpg', './images/front3.jpg', './images/front4.jpg'])
@@ -1078,49 +1086,6 @@ root.directive('scrollUp', ['scrollFn', function (scrollFn) {
 
 */
 
-root.config(function ($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise("");
-
-    $stateProvider
-		.state('home', {
-		    url: "",
-		    templateUrl: "home.php",
-		    controller: "homeCtrl",
-		    reloadOnSearch: false,
-		    resolve: {
-		    }
-		})
-		.state('about', {
-		    url: "/about",
-		    templateUrl: "",
-		    controller: "aboutCtrl",
-		    reloadOnSearch: false,
-		    resolve: {
-
-		    }
-		})
-
-		.state('about.bio', {
-		    reloadOnSearch: false,
-		    resolve: {
-
-		    }
-		})
-		.state('about.disc', {
-		    reloadOnSearch: false,
-		    resolve: {
-
-		    }
-		})
-        .state('about.rep', {
-            reloadOnSearch: false,
-            resolve: {
-
-            }
-        })
-
-});
-
 root.config(['$locationProvider', '$routeProvider', function ($locationProvider, $routeProvider) {
     $locationProvider.html5Mode(true);
     $routeProvider.when("/about", {
@@ -1413,67 +1378,8 @@ root.config(['$locationProvider', '$routeProvider', function ($locationProvider,
         reloadOnSearch: false
     }).otherwise({
         templateUrl: "homev2.php",
-        controller: "homeCtrl",
-        reloadOnSearch: false,
-        resolve: {
-            list: function ($q, $log, homeResource, fbResource) {
-                var deferred = $q.defer();
-                var master;
-                var cb = function (result) {
-                    for (var key in result) {
-                        var obj = result[key];
-                        if (obj.Blurb) {
-                            obj.Blurb = obj.Blurb.replace(/\\/g, '');
-                        }
-                        if (obj.Posted) {
-                            obj.Posted = new Date(obj.Posted.replace(' ', 'T') + 'Z');
-                        }
-                    }
-                    master = result;
-                    fbResource.query({}, fcb);
-                };
-                var fcb = function (result) {
-                    for (var key in result) {
-                        var obj = result[key];
-                        isYT = false;
-                        if (obj.message) {
-                            obj.Blurb = obj.message.replace(/\\/g, '');
-                            //console.log(obj.Blurb);
-                            obj.Blurb = obj.Blurb.replace(/(((https?:\/\/)|(www))[\.\w\/?=\+%#-A-Za-z0-9]*)/g, '<a href="' + '$1' + '" target="_blank">' + '$1' + '</a>');
-                            if (obj.Blurb.indexOf("www.youtube.com") != -1 || obj.Blurb.indexOf("youtu.be") != -1) {
-                                isYT = true;
-                                url = obj.link.substr(obj.link.indexOf("v=") + 2, 11);
-                                obj.Blurb = obj.Blurb + '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + url + '?origin=http://seanchenpiano.com" frameborder="0" allowfullscreen></iframe>';
-                            }
-                        }
-                        if (obj.created_time) {
-                            obj.Posted = new Date(obj.created_time.substr(0, obj.created_time.length - 2) + ':' + obj.created_time.substr(obj.created_time.length - 2, 2));
-                        }
-                        obj.Title = 'Posted to <a href="http://www.facebook.com/seanchenpiano" target="_blank">Facebook Page</a>';
-                        if (obj.picture) {
-                            obj.picture = obj.picture.replace(/\\/g, '');
-                            obj.picture = obj.picture.replace('s.jpg', 'o.jpg');
-                            if (isYT) {
-                                obj.picture = "";
-                            }
-                        }
-                        if (obj.story) {
-                            if (obj.link) {
-                                if (obj.story.indexOf("event") != -1) {
-                                    obj.story = obj.story.replace('event', '<a href="' + obj.link + '" target="_blank">event</a>');
-                                } else {
-                                    obj.story = '<a href="https://www.facebook.com/seanchenpiano/posts/' + obj.id.substr(obj.id.indexOf('_') + 1, obj.id.length) + '" target="_blank">' + obj.story + '</a>';
-                                }
-                            }
-                        }
-                    }
-                    master = master.concat(result);
-                    deferred.resolve(master);
-                };
-                homeResource.query({ q: '', n: '8' }, cb);
-                return deferred.promise;
-            }
-        }
+        controller: "",
+        reloadOnSearch: false
     });
 }]);
 
