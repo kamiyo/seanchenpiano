@@ -1,4 +1,5 @@
 <div class="heading">Concerti</div>
+<div>For recordings of recent performances, please contact Sean or Joel.</div>
 <table id="musicList">
   <thead>
     <tr>

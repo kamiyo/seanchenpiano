@@ -6,9 +6,9 @@
   mysql_query("SET NAMES UTF8");
  	mysql_select_db($DB_NAME) or die ('Could not select database');
 	if ($type == 's') {
-		$query = 'SELECT * FROM '.$ACCLAIM.' WHERE short <> \'\' ORDER BY ID DESC;';
+		$query = 'SELECT * FROM '.$ACCLAIM.' WHERE short <> \'\' ORDER BY ID ASC;';
 	} else {
-		$query = 'SELECT * FROM '.$ACCLAIM.' ORDER BY ID DESC;';
+		$query = 'SELECT * FROM '.$ACCLAIM.' ORDER BY ID ASC;';
 	}
 	$result = mysql_query($query);
 	$arr = array();

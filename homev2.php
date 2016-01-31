@@ -1,8 +1,4 @@
 ﻿<div>
-  <div class="homeBlurb leftpad" id="biography">
-    <p>Hailed as a charismatic rising star with "an exceptional ability to connect with an audience combined with an easy virtuosity" (Huffington Post), <?php $diff = abs(strtotime(date("Y-m-d")) - strtotime("1988-08-27")); echo floor($diff / (365 * 60 * 60 * 24)); ?>-year-old American pianist Sean Chen, third prize winner at the 2013 Van Cliburn International Piano Competition and 2013 DeHaan Classical Fellow of the American Pianists Association, has continued to earn accolades for "alluring, colorfully shaded renditions" (New York Times) and "genuinely sensitive" (LA Times) playing. Sean was recently named a 2015 fellow by the prestigious Leonore Annenberg Fellowship Fund for the Performing Arts.</p>
-    <p>He has performed with many renowned orchestras, including the Fort Worth, Hartford, Indianapolis, Milwaukee, Pasadena, Phoenix, San Diego, Santa Fe, Tucson, and New West Symphonies, as well as the Philadelphia, Indianapolis, and South Bay Chamber Orchestras, collaborating with such esteemed conductors as Leonard Slatkin, Gerard Schwarz, Nicholas McGegan, Miguel Harth-Bedoya, Marcelo Lehninger, Nir Kabaretti, James Judd, George Hanson, and Boris Brott. Solo recitals have brought him to major venues worldwide, including Jordan Hall in Boston, Subculture in New York City, the American Art Museum at the Smithsonian in Washington, D.C., the National Concert Hall in Taipei, Het Concertgebouw in Amsterdam, and the Salle Cortot in Paris.</p>
-
-	<p align="right"><a ng-href="/about">read the full bio...</a></p>
+  <div class="homeBlurb leftpad" id="biography" ng-bind-html="bio">
   </div>
 </div>

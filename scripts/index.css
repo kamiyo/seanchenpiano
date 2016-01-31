@@ -593,6 +593,10 @@ div.musicHover {
             border-left: 1px solid #ffffff;
         }
 
+.calDescription {
+    font-size: 0.8em;
+}
+
 .otherMonth {
     color: #a73115;
 }
@@ -838,6 +842,7 @@ div.musicHover {
 #biography p {
     text-indent: 15px;
     font-size: 18px;
+    line-height: 130%;
 }
 
 #press img {
@@ -923,6 +928,7 @@ div.musicHover {
     font-style: italic;
     width: 300px;
     z-index: 15;
+    font-weight: bold;
 }
 
 .blog {

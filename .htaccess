@@ -25,12 +25,9 @@ RewriteRule ^/?([^/]+)/?$ snapshots/$1.php [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.+)\.(\d+)\.(js|css|png|jpg|gif)$ $1.$3 [L]
 
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule .+ - [L]
-
-RewriteRule ^[^/]+/?$ index.php [L]
-RewriteRule ^[^/]+/[^/]+/?$ index.php [L]
+RewriteCond %{REQUEST_FILENAME} !-f 
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
 
 <ifModule mod_headers.c>
 <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|swf|svg|woff)$">

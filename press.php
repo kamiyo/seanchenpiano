@@ -1,3 +1,4 @@
+<div>For recordings of recent performances, please contact Sean or Joel.</div>
 <table id="press">
   <tr>
     <td>Biography</td>
@@ -35,11 +36,12 @@
     </td>
   </tr>
  </table>
-
+<br /><br />
+<div class="heading">Critical Acclaim</div>
 <div id="quotes">
   <div ng-repeat="quote in quotes | orderBy:ID:false">
     <p>&ldquo;{{process(quote.quote)}}&rdquo;</p>
-    <div class="italics">&mdash;{{quote.author}}, ({{quote.date}})</div>
+    <div class="italics">&mdash;{{quote.author}} ({{quote.date}})</div>
   </div>
 </div>
 
